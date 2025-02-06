@@ -1,42 +1,36 @@
 import time
-from http.cookiejar import liberal_is_HDN
-from random import random,randint
+from random import randint
 from threading import Thread, Condition
 
-
-class Libreria(Thread):
-    libros = ["Node","Js","Nada","Tete","Edu","Normandia","Berlin","Pearl Harbor","Marco Polo"]
+class Libreria:
+    libros = [False, False, False, False, False, False, False]  # False = Disponible, True = Ocupado
     cond = Condition()
-
-    def __init__(self, nombre):
-        Thread.__init__(self, name=nombre)
-
-
-
 
 class Estudiante(Thread):
     def __init__(self, nombre, libreria):
-        Thread.__init__(self, name=nombre)
+        super().__init__(name=f"Estudiante-{nombre}")
         self.libreria = libreria
 
-        def run(self):
-            # Se genera una posición aleatoria de la lista
-            num = randint(0, 4)
+    def run(self):
+        libro1 = randint(0, len(self.libreria.libros) - 1)
+        libro2 = randint(0, len(self.libreria.libros) - 1)
+        while libro1 == libro2:
+            libro2 = randint(0, len(self.libreria.libros) - 1)
 
-            # Mientras el objeto esté siendo usado por otro hilo no lo puede usar el actual
-            with self.libreria.cond:
-                while self.libreria.libros[num] == True:
-                    print("El hilo", self.name, "está esperando a que se libere la posición", num)
-                    Lista.cond.wait()
+        with self.libreria.cond:
+            while self.libreria.libros[libro1] or self.libreria.libros[libro2]:
+                print(f"{self.name} está esperando a que se liberen los libros {libro1} y {libro2}")
+                self.libreria.cond.wait()
 
-                # Una vez que su posición está libre la bloquea
-                Lista.lista[num] = True
+            # Reservar los libros
+            self.libreria.libros[libro1] = True
+            self.libreria.libros[libro2] = True
 
-            print("El hilo", self.name, "está usando el objeto", num)
-            time.sleep(randint(1, 4))
-            print("El hilo", self.name, "ha terminado de usar el objeto", num)
+        print(f"{self.name} está usando los libros {libro1} y {libro2}")
+        time.sleep(randint(1, 4))
+        print(f"{self.name} ha terminado de usar los libros {libro1} y {libro2}")
 
-            with Lista.cond:
-                Lista.lista[num] = False
-                # Notificamos al resto de hilos de que se ha liberado una posición
-                Lista.cond.notifyAll()
+        with self.libreria.cond:
+            self.libreria.libros[libro1] = False
+            self.libreria.libros[libro2] = False
+            self.libreria.cond.notify_all()  # Notificar a otros hilos que los libros están libres
