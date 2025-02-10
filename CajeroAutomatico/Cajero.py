@@ -3,17 +3,23 @@ from threading import Semaphore, Thread,Lock
 import time
 
 class Cliente(Thread):
-    cajero = Semaphore(3)
+    carniceria = Semaphore(4)
 
 
     def __init__(self,nombre):
         Thread.__init__(self,name=nombre)
 
     def run(self):
-        print(f"🧑‍🦲 Cliente {self.name} está esperando para usar el cajero")
-        Cliente.cajero.acquire()
-        print(f"🪙 Cliente {self.name} está sacando dinero.")
+        print(f"🧑‍🦲 Cliente {self.name} está esperando para ser atendido")
+        Cliente.carniceria.acquire()
+        print(f"🪙 Cliente {self.name} está siendo atendido.")
         time.sleep(random.randint(1,5) )
 
-        Cliente.cajero.release()
-        print(f"📤 Cliente {self.name} ha terminado de utilizar el cajero. Cajeros diponibles {self.cajero._value} ")
+        Cliente.carniceria.release()
+        print(f"📤 Cliente {self.name} ha terminado en la carniceria.")
+
+
+if __name__ == '__main__':
+    for i in range(1,11):
+        c = Cliente(i)
+        c.start()
